@@ -107,6 +107,42 @@
 		<profile>
 			<id>localdeps</id>
 			<properties>
+				<!-- 
+					To use local repository mirrors, the following steps must be performed:
+				
+					 1. Create local repository mirrors (eclipse, emf, gef, wtp, orbit, dtp and jetty)    
+					 
+						Example for "eclipse" repository (replace ${pwd} with your local path):
+				     
+				     	eclipse.exe
+				     	-application org.eclipse.equinox.p2.artifact.repository.mirrorApplication
+				     	-source http://download.eclipse.org/eclipse/updates/4.11/
+				     	-destination file:${pwd}/build/deps/eclipse
+				     
+				    	 eclipse.exe
+				     	-application org.eclipse.equinox.p2.metadata.repository.mirrorApplication
+				     	-source http://download.eclipse.org/eclipse/updates/4.11/
+				     	-destination file:${pwd}/build/deps/eclipse
+				     
+				     	For additional information, see https://help.eclipse.org/2020-03/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2Fp2_mirror.html&cp%3D2_0_20_3_0 
+				     	
+				     2. Adjust "localdeps" profile properties (eclipse.release.name, tycho.version, jetty.version, mongodb.version and lucene.version)
+				        or use maven command line options (-Declipse.release.name=2019-03 -Dtycho.version=1.0.0 ...)
+				     
+				     3. Run maven build
+
+				     	mvn clean install -Dlocaldeps [-DskipTests] [-Dpwd=/X:/eclipse/birt -Declipse.release.name=2019-03 -Dtycho.version=1.0.0 ...]
+				-->
+			
+				<!--
+				<pwd>[path]</pwd>
+				<eclipse.release.name>[name]</eclipse.release.name>
+				<tycho.version>[version]</tycho.version>
+				<jetty.version>[version]</jetty.version>
+				<mongodb.version>[version]</mongodb.version>
+				<lucene.version>[version]</lucene.version>
+				-->
+			
 				<!-- mavenists would claim that these should be relative to ${basedir}
 				     1. ${basedir} is each plugin dir in turn, 2. causes massive memleaks -->
 				<eclipse.repo.url>file://${pwd}/build/deps/eclipse</eclipse.repo.url>
@@ -115,6 +151,7 @@
 				<wtp.repo.url>file://${pwd}/build/deps/wtp</wtp.repo.url>
 				<orbit.repo.url>file://${pwd}/build/deps/orbit</orbit.repo.url>
 				<dtp.repo.url>file://${pwd}/build/deps/dtp</dtp.repo.url>
+				<jetty.repo.url>file://${pwd}/build/deps/jetty</jetty.repo.url>
 			</properties>
 		</profile>
 
