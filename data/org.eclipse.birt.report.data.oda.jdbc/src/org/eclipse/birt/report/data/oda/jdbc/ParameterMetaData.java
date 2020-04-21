@@ -12,6 +12,8 @@
 package org.eclipse.birt.report.data.oda.jdbc;
 
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Types;
 import java.util.logging.Logger;
 
 import org.eclipse.datatools.connectivity.oda.IParameterMetaData;
@@ -30,7 +32,11 @@ public class ParameterMetaData implements IParameterMetaData
 	/** JDBC ParameterMetaData instance */
 	private java.sql.ParameterMetaData paraMetadata;
 
-	private static Logger logger = Logger.getLogger( ParameterMetaData.class.getName( ) );	
+	private static Logger logger = Logger.getLogger( ParameterMetaData.class.getName( ) );
+	
+	private static String MYSQL_NOT_SUPPORTED_SQL_STATE = "S1C00";
+	
+	private static int ORA_NOT_SUPPORTED_ERROR_CODE = 17023;
 
 	/**
 	 * assertNotNull(Object o)
@@ -104,9 +110,9 @@ public class ParameterMetaData implements IParameterMetaData
 				"getParameterMode",
 				"ParameterMetaData.getParameterMode( )" );
 		assertNotNull( paraMetadata );
+		int result = IParameterMetaData.parameterModeUnknown;
 		try
 		{
-			int result = IParameterMetaData.parameterModeUnknown;
 			if ( paraMetadata.getParameterMode( param ) == java.sql.ParameterMetaData.parameterModeIn )
 				result = IParameterMetaData.parameterModeIn;
 			else if ( paraMetadata.getParameterMode( param ) == java.sql.ParameterMetaData.parameterModeOut )
@@ -117,6 +123,8 @@ public class ParameterMetaData implements IParameterMetaData
 		}
 		catch ( SQLException e )
 		{
+			if ( isFeatureNotSupported( e ) )
+				return result;
 			throw new JDBCException( ResourceConstants.PARAMETER_MODE_CANNOT_GET,
 					e );
 		}
@@ -134,7 +142,6 @@ public class ParameterMetaData implements IParameterMetaData
      */
     public String getParameterName( int param ) throws OdaException
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -156,8 +163,8 @@ public class ParameterMetaData implements IParameterMetaData
 		}
 		catch ( SQLException e )
 		{
-			if ( "S1C00".equals( e.getSQLState( ) ) )
-				return -1;
+			if ( isFeatureNotSupported( e ) )
+				return Types.NULL;
 			throw new JDBCException( ResourceConstants.PARAMETER_TYPE_CANNOT_GET,
 					e );
 		}
@@ -190,8 +197,8 @@ public class ParameterMetaData implements IParameterMetaData
 		}
 		catch ( SQLException e )
 		{
-			if ( "S1C00".equals( e.getSQLState( ) ) )
-				return "VARCHAR";
+			if ( isFeatureNotSupported( e ) )
+				return "";
 			throw new JDBCException( ResourceConstants.PARAMETER_TYPE_NAME_CANNOT_GET,
 					e );
 		}
@@ -222,7 +229,7 @@ public class ParameterMetaData implements IParameterMetaData
 		}
 		catch ( SQLException e )
 		{
-			if ( "S1C00".equals( e.getSQLState( ) ) )
+			if ( isFeatureNotSupported( e ) )
 				return 0;
 			throw new JDBCException( ResourceConstants.PARAMETER_PRECISION_CANNOT_GET,
 					e );
@@ -254,7 +261,7 @@ public class ParameterMetaData implements IParameterMetaData
 		}
 		catch ( SQLException e )
 		{
-			if ( "S1C00".equals( e.getSQLState( ) ) )
+			if ( isFeatureNotSupported( e ) )
 				return 0;
 			throw new JDBCException( ResourceConstants.PARAMETER_SCALE_CANNOT_GET,
 					e );
@@ -290,7 +297,7 @@ public class ParameterMetaData implements IParameterMetaData
 		}
 		catch ( SQLException e )
 		{
-			if ( "S1C00".equals( e.getSQLState( ) ) )
+			if ( isFeatureNotSupported( e ) )
 				return result;
 			throw new JDBCException( ResourceConstants.PARAMETER_NULLABILITY_CANNOT_DETERMINE,
 					e );
@@ -302,5 +309,18 @@ public class ParameterMetaData implements IParameterMetaData
 					new SQLException( e.getMessage( ) ) );
 		}		
 
+	}
+	
+	/**
+	 * Returns whether it is an feature not supported exception.
+	 * 
+	 * @param exception
+	 * @return
+	 */
+	private boolean isFeatureNotSupported( SQLException exception )
+	{
+		return exception instanceof SQLFeatureNotSupportedException
+			   || MYSQL_NOT_SUPPORTED_SQL_STATE.equals( exception.getSQLState( ) )
+			   || ORA_NOT_SUPPORTED_ERROR_CODE == exception.getErrorCode( );
 	}
 }
